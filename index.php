@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head><title>My Project</title></head>
+<head><title>Login form</title></head>
 
 <body>
 
