@@ -1,0 +1,261 @@
+imports
+Imports System.Data.OleDb
+Imports System.IO
+
+
+connectinng Access
+    Dim con As New OleDbConnection("Provider access string")
+    Dim cmd As New OleDbCommand
+    Dim dt As New DataTable
+    Dim da As New OleDbDataAdapter(cmd)
+
+
+Test connections
+ Try
+            con.Open()
+            If con.State = ConnectionState.Open Then
+                MsgBox("connected")
+            Else
+                MsgBox(" Not connected")
+
+            End If
+        Catch ex As Exception
+            MsgBox(ex.Message)
+        Finally
+            con.Close()
+        End Try
+
+Insert into statement
+con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "INSERT INTO register values('" & txt_firstname.Text & "','" & txt_lastname.Text & "','" & txt_username.Text & "','" & txt_password.Text & "')"
+        cmd.ExecuteNonQuery()
+        con.Close()
+        MessageBox.Show("Recorded successfully!")
+
+Password Validation
+If txtuser.Text = Nothing Or txtpass.Text = Nothing Then
+            MsgBox("Enter Credentials", MsgBoxStyle.Exclamation)
+        Else
+            If con.State = ConnectionState.Closed Then
+                con.Open()
+            End If
+
+            str = "select * from register where username=@user and [password]=@pass"
+            Dim cmd As New OleDbCommand(str, con)
+            cmd.Parameters.AddWithValue("@user", txtuser.Text)
+            cmd.Parameters.AddWithValue("@pass", txtpass.Text)
+            dr = cmd.ExecuteReader
+            If dr.HasRows Then
+                dr.Read()
+
+                If txtuser.Text = dr("username").ToString AndAlso txtpass.Text = dr("password").ToString Then
+                    MsgBox("welcome " & dr("firstname") & "!")
+
+                Else
+
+                    MsgBox("Account not found,check credentials")
+
+                End If
+            Else
+
+
+                MsgBox("Account not found,check credentials")
+            End If
+
+        End If
+
+
+
+
+        con.Close()
+
+Loading Data into datagridview
+
+     con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "SELECT * from employee "
+        da.SelectCommand = cmd
+        da.Fill(dt)
+        DataGridView1.DataSource = dt
+
+        con.Close()
+
+Select statement
+        Private Sub viewer()
+        DataGridView1.DataSource = Nothing
+        DataGridView1.Refresh()
+
+        con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        da = New OleDbDataAdapter("SELECT * from sales ", con)
+        da.Fill(dt)
+        DataGridView1.DataSource = dt
+
+        con.Close()
+
+        DataGridView1.Columns(0).Width = 100
+        DataGridView1.Columns(1).Width = 100
+        DataGridView1.Columns(2).Width = 100
+        DataGridView1.Columns(3).Width = 100
+        DataGridView1.Columns(4).Width = 100
+        DataGridView1.Columns(5).Width = 100
+
+Delete statement
+        con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "DELETE * from sales WHERE Employee_Name ='" & proname.Text & "'"
+        cmd.ExecuteNonQuery()
+        con.Close()
+        MessageBox.Show("Record deleted successfully!")
+        viewer()
+
+
+
+        con.Close()
+
+Update statement
+        con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "UPDATE sales set product_name='" & proname.Text & "',quantity=" & Val(proquant.Text) & ",price=" & Val(proprice.Text) & ",category=" & procat.Text & ",Total_amount=" & Val(proamt.Text) & " Where product_id =" & Val(proid.Text) & " "
+        cmd.ExecuteNonQuery()
+        con.Close()
+        MessageBox.Show("updated successfully!")
+        viewer()
+
+Clear fields
+        Textbox.Text = ""
+
+load data from gridview to textbox
+       Private Sub datagridview1_cellclick(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DataGridViewCellEventArgs) Handles DataGridView1.CellClick
+        proid.Text = DataGridView1.SelectedRows(0).Cells(0).Value.ToString
+        proname.Text = DataGridView1.SelectedRows(0).Cells(1).Value.ToString
+        proquant.Text = DataGridView1.SelectedRows(0).Cells(2).Value.ToString
+        proprice.Text = DataGridView1.SelectedRows(0).Cells(3).Value.ToString
+        procat.Text = DataGridView1.SelectedRows(0).Cells(4).Value.ToString
+        proamt.Text = DataGridView1.SelectedRows(0).Cells(5).Value.ToString
+    End Sub
+        
+
+
+loading from combo box
+ con.Open()
+        Dim cmd As New OleDbCommand("select * from stock", con)
+        Dim dr As OleDbDataReader = cmd.ExecuteReader
+        While dr.Read
+            pname.Items.Add(dr(1).ToString)
+
+        End While
+        dr.Close()
+
+
+combo box indexing
+      con.Open()
+        Dim cmd As New OleDbCommand("select category from stock WHERE product_name='" & pname.Text & "'", con)
+        Dim dr As OleDbDataReader = cmd.ExecuteReader
+        While dr.Read
+
+            pcat.Text = dr("Category").ToString
+        End While
+        dr.Close()
+        con.Close()
+
+subtracting from quantities when an item is being bought
+      con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "UPDATE Stock SET quantity = quantity - " & Val(pquant.Text) & " Where product_id =" & Val(proid.Text) & ""
+        cmd.ExecuteNonQuery()
+        con.Close()
+
+load between two dates from a database
+ Private Sub viewer()
+        DataGridView1.DataSource = Nothing
+        DataGridView1.Refresh()
+
+        con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "SELECT * from sales WHERE day_date between #" & DateTimePicker2.Text & "# and  #" & DateTimePicker1.Text & "#"
+        dr = cmd.ExecuteReader
+        While dr.Read
+
+            DataGridView1.Rows.Add(dr.Item("product_id").ToString, dr.Item("product_name").ToString, dr.Item("quantity").ToString, dr.Item("price").ToString, dr.Item("category").ToString, dr.Item("total").ToString, dr.Item("day_date").ToString)
+
+        End While
+        con.Close()
+
+
+    End Sub
+
+
+display content from database
+  con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "SELECT quantity from stock Where product_id =" & Val(proid.Text) & ""
+        Dim dr As OleDbDataReader = cmd.ExecuteReader
+        While dr.Read
+            Dim dbquantity As Integer = dr("quantity").ToString
+            MessageBox.Show("Item left is:" & dbquantity.ToString)
+        End While
+        con.Close()
+
+Print
+Private Sub btnsave_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnsave.Click
+
+        PrintPreviewDialog1.ShowDialog()
+        PrintDocument1.Print()
+
+    End Sub
+
+    Private Sub PrintDocument1_PrintPage(ByVal sender As System.Object, ByVal e As System.Drawing.Printing.PrintPageEventArgs) Handles PrintDocument1.PrintPage
+        Dim bm As New Bitmap(Me.DataGridView1.Width, Me.DataGridView1.Height)
+        DataGridView1.DrawToBitmap(bm, New Rectangle(10, 10, Me.DataGridView1.Width, Me.DataGridView1.Height))
+        e.Graphics.DrawImage(bm, 0, 0)
+
+    End Sub
+
+from sale quantity operation
+1.con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "UPDATE Stock SET quantity = 0 Where quantity < 0"
+        cmd.ExecuteNonQuery()
+        con.Close()
+2.con.Open()
+        cmd = con.CreateCommand()
+        cmd.CommandType = CommandType.Text
+        cmd.CommandText = "SELECT quantity from stock Where product_id =" & Val(proid.Text) & ""
+        Dim dr As OleDbDataReader = cmd.ExecuteReader
+        If dr.Read Then
+
+            Dim dbquantity As Integer = dr("quantity").ToString
+            If dbquantity < 5 Then
+                MsgBox("Stock is running out!!!", MsgBoxStyle.Information)
+            End If
+
+
+
+        End If
+        con.Close()
+
+Private Sub pquant_MouseEnter(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles pquant.MouseEnter
+        pquant.Text = ""
+        pquant.Focus()
+        pquant.ForeColor = Color.Black
+
+Private Sub pquant_MouseLeave(ByVal sender As Object, ByVal e As System.EventArgs) Handles pquant.MouseLeave
+        If (pquant.Text = "") Then
+            pquant.Text = "Update after product name selection"
+            pquant.ForeColor = Color.Silver
+        End If
+
+sale load textbox
+ pquant.Text = "Update after product name selection"
+        pquant.ForeColor = Color.Silver
